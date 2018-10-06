@@ -4,13 +4,10 @@ ENV DEBIAN_FRONTEND noninteractive
 
 ARG DOCKER_RELEASE_STAGE
 ARG INSTALLER_VERSION
+ARG VMWARE_WS_DRVER_VERSION
 ARG DOCKER_VERSION
 ARG DOCKER_COMPOSE_VERSION
 ARG DOCKER_MACHINE_VERSION
-ARG KITEMATIC_VERSION
-ARG VBOX_VERSION
-ARG VBOX_REV
-ARG MIXPANEL_TOKEN
 
 RUN dpkg --add-architecture i386
 RUN sed -i "s/main/main contrib non-free/" /etc/apt/sources.list
@@ -50,24 +47,11 @@ RUN curl -fsSL -o docker-machine.exe "https://github.com/docker/machine/releases
 
 RUN curl -fsSL -o docker-compose.exe "https://github.com/docker/compose/releases/download/$DOCKER_COMPOSE_VERSION/docker-compose-Windows-x86_64.exe"
 
-RUN curl -fsSL -o boot2docker.iso https://github.com/boot2docker/boot2docker/releases/download/v$DOCKER_VERSION/boot2docker.iso
-
-RUN curl -fsSL -o kitematic.zip "https://github.com/kitematic/kitematic/releases/download/v$KITEMATIC_VERSION/Kitematic-$KITEMATIC_VERSION-Windows.zip" && \
-    mkdir kitematic && \
-    cd kitematic && \
-    unzip ../kitematic.zip && \
-    rm ../kitematic.zip
-RUN curl -fsSL -o Git.exe "https://github.com/git-for-windows/git/releases/download/v$GIT_VERSION.windows.1/Git-$GIT_VERSION-64-bit.exe"
-RUN curl -fsSL -o virtualbox.exe "http://download.virtualbox.org/virtualbox/$VBOX_VERSION/VirtualBox-$VBOX_VERSION-$VBOX_REV-Win.exe" \
-	&& echo "$(curl -fsSL 'https://virtualbox.org/download/hashes/'"$VBOX_VERSION"'/SHA256SUMS' | awk '$2 ~ /-Win.exe$/ { print $1 }') *virtualbox.exe" | sha256sum -c -
-RUN wine virtualbox.exe -extract -silent -path . && \
-	  rm virtualbox.exe && \
-	  rm *x86.msi && \
-	  mv *_amd64.msi VirtualBox_amd64.msi
+RUN curl -fsSL -o docker-machine-driver-vmwareworkstation.exe "https://github.com/pecigonzalo/docker-machine-vmwareworkstation/releases/download/v$VMWARE_WS_DRVER_VERSION/docker-machine-driver-vmwareworkstation.exe"
 
 # Add installer resources
 COPY windows /installer
 
 WORKDIR /installer
 RUN rm -rf /tmp/.wine-0/
-RUN wine ../innosetup/ISCC.exe Toolbox.iss /DMyAppVersion=$INSTALLER_VERSION /DMixpanelToken=$MIXPANEL_TOKEN
+RUN wine ../innosetup/ISCC.exe Toolbox.iss /DMyAppVersion=$INSTALLER_VERSION /DvmWareWsDriverVersion=$VMWARE_WS_DRVER_VERSION
